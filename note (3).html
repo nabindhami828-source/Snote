@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>My Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2b2a;
+    --paper:#f7f4ee;
+    --paper-raised:#ffffff;
+    --line:#d8d2c4;
+    --moss:#4a6b5a;
+    --moss-dark:#324a3e;
+    --amber:#d98e3c;
+    --amber-dark:#b8721f;
+    --danger:#b5493f;
+    --muted:#8a8478;
+    --shadow: 0 1px 2px rgba(28,43,42,0.06), 0 6px 18px rgba(28,43,42,0.08);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; height:100%;}
+  body{
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px);
+    background-size: 100% 34px;
+    font-family:'Manrope', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app{ max-width:640px; margin:0 auto; padding:20px 18px 100px; }
+
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding: 14px 2px 18px;
+  }
+  header.top h1{
+    font-family:'Fraunces', serif; font-weight:600; font-size:28px; margin:0;
+    letter-spacing:-0.01em;
+  }
+  header.top .who{
+    font-size:12px; color:var(--muted); text-align:right; max-width:150px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+
+  #status{
+    font-size:13px; color:var(--muted); padding:0 2px 10px; min-height:18px;
+  }
+  #status.error{ color:var(--danger); }
+
+  .composer{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    box-shadow: var(--shadow);
+    margin-bottom:26px;
+  }
+  .composer input[type=text]{
+    width:100%; border:none; outline:none; background:transparent;
+    font-family:'Fraunces', serif; font-size:19px; font-weight:600; color:var(--ink);
+    padding:2px 0 10px; border-bottom:1px solid var(--line); margin-bottom:10px;
+  }
+  .composer input[type=text]::placeholder{ color:#b6b0a2; font-weight:500; }
+  .composer textarea{
+    width:100%; min-height:64px; border:none; outline:none; resize:vertical;
+    background:transparent; font-family:'Manrope', sans-serif; font-size:15px;
+    color:var(--ink); line-height:1.5;
+  }
+  .composer textarea::placeholder{ color:#b6b0a2; }
+  .composer-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+
+  button{
+    font-family:'Manrope', sans-serif; font-weight:600; font-size:14px;
+    border:none; border-radius:9px; padding:9px 16px; cursor:pointer;
+    transition: transform .08s ease, opacity .15s ease;
+  }
+  button:active{ transform: scale(0.97); }
+  .btn-primary{ background:var(--moss); color:#fdfcf9; }
+  .btn-primary:hover{ background:var(--moss-dark); }
+  .btn-ghost{ background:transparent; color:var(--muted); }
+  .btn-ghost:hover{ color:var(--ink); }
+  .btn-danger{ background:transparent; color:var(--danger); }
+
+  .section-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--muted); margin: 4px 2px 12px; font-weight:700;
+  }
+
+  .notes-list{ display:flex; flex-direction:column; gap:12px; }
+
+  .note-card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-left:4px solid var(--amber);
+    border-radius:12px;
+    padding:14px 16px;
+    box-shadow: var(--shadow);
+    position:relative;
+  }
+  .note-card h3{
+    font-family:'Fraunces', serif; font-weight:600; font-size:18px; margin:0 0 6px;
+    padding-right:60px;
+  }
+  .note-card p{
+    margin:0; font-size:14.5px; line-height:1.55; color:#3c463f;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .note-meta{
+    font-size:11px; color:var(--muted); margin-top:10px;
+  }
+  .note-actions{
+    position:absolute; top:12px; right:12px; display:flex; gap:6px;
+  }
+  .icon-btn{
+    background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    padding:0; color:var(--muted);
+  }
+  .icon-btn:hover{ color:var(--ink); }
+  .icon-btn.del:hover{ color:var(--danger); border-color:var(--danger); }
+
+  .empty{
+    text-align:center; padding:50px 20px; color:var(--muted);
+  }
+  .empty .glyph{ font-family:'Fraunces', serif; font-size:40px; color:#c9c2b2; }
+  .empty p{ margin:10px 0 0; font-size:14px; }
+
+  .edit-mode textarea, .edit-mode input{
+    width:100%; font-family:inherit; border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; outline:none; background:var(--paper);
+  }
+  .edit-mode input{ font-family:'Fraunces', serif; font-weight:600; font-size:17px; margin-bottom:8px; }
+  .edit-mode textarea{ min-height:70px; font-size:14.5px; margin-top:0; }
+  .edit-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
+
+  @media (max-width: 380px){
+    header.top h1{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>My Notes</h1>
+    <div class="who" id="whoami">loading…</div>
+  </header>
+
+  <div id="status"></div>
+
+  <div class="composer">
+    <input type="text" id="noteTitle" placeholder="Title">
+    <textarea id="noteBody" placeholder="Write a note…"></textarea>
+    <div class="composer-actions">
+      <button class="btn-primary" id="addBtn">Add note</button>
+    </div>
+  </div>
+
+  <div class="section-label">Your notes</div>
+  <div class="notes-list" id="notesList"></div>
+  <div class="empty" id="emptyState" style="display:none;">
+    <div class="glyph">✎</div>
+    <p>No notes yet. Write your first one above.</p>
+  </div>
+</div>
+
+<!-- ============================================================
+     FIRESTORE SECURITY RULES (reference only — NOT executed here)
+     ------------------------------------------------------------
+     These rules do NOT run in this HTML file. They must be pasted
+     into the Firebase Console under:
+       Firestore Database > Rules
+     and then published, or deployed via the Firebase CLI:
+       firebase deploy --only firestore:rules
+
+     rules_version = '2';
+     service cloud.firestore {
+       match /databases/{database}/documents {
+         match /{document=**} {
+           allow read, write: if false;
+         }
+       }
+     }
+
+     ⚠ NOTE: "if false" blocks ALL reads and writes for everyone,
+     including this app. With this rule in place, "Add note" will
+     fail with "Missing or insufficient permissions" every time.
+     This is the safest possible default (deny everything), but it
+     means the app cannot function until a real rule is published
+     that matches how users are identified (see prior discussion
+     about Firebase Auth vs. the URL/Kodular-supplied uid).
+     ============================================================ -->
+
+<!-- Firebase SDK (modular v12) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, orderBy, query, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+/* ============================================================
+   1) FIREBASE CONFIG
+   Get this from: Firebase Console > Project settings > General
+   > Your apps > SDK setup and configuration > Config
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCfCTtr4CKMW37TXfIfyfePav5sUidogJs",
+  authDomain: "snote-420ed.firebaseapp.com",
+  projectId: "snote-420ed",
+  storageBucket: "snote-420ed.firebasestorage.app",
+  messagingSenderId: "218698551845",
+  appId: "1:218698551845:web:ff0bd0ecdd603205e865cc"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ============================================================
+   2) GET THE LOGGED-IN USER'S UID FROM KODULAR
+   Two ways this page can receive the UID from your Kodular app.
+   Both are supported — whichever arrives first is used.
+
+   OPTION A — URL parameter (simplest):
+   In Kodular, before opening the WebView, set its Source to:
+     "https://yoursite.com/notes.html?uid=" + TinyDB1.GetValue("uid","")
+
+   OPTION B — WebViewString bridge:
+   In Kodular, set WebView1.WebViewString to the UID BEFORE
+   navigating to the page (or right after Screen.Initialize),
+   e.g. WebView1.WebViewString = TinyDB1.GetValue("uid","")
+   This page reads it via window.AppInventor.getWebViewString()
+   ============================================================ */
+function getUid() {
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = params.get('uid');
+  if (fromUrl) return fromUrl;
+
+  try {
+    if (window.AppInventor && window.AppInventor.getWebViewString) {
+      const fromKodular = window.AppInventor.getWebViewString();
+      if (fromKodular) return fromKodular;
+    }
+  } catch (e) { /* not running inside Kodular WebView */ }
+
+  return null;
+}
+
+let uid = getUid();
+const statusEl = document.getElementById('status');
+const whoEl = document.getElementById('whoami');
+const listEl = document.getElementById('notesList');
+const emptyEl = document.getElementById('emptyState');
+
+function setStatus(msg, isError) {
+  statusEl.textContent = msg || '';
+  statusEl.className = isError ? 'error' : '';
+}
+
+const notesRef = () => collection(db, 'users', uid, 'notes');
+
+if (!uid) {
+  setStatus('No user ID received from the app. Open this page through Kodular after login.', true);
+  whoEl.textContent = 'not signed in';
+} else {
+  whoEl.textContent = uid;
+  setStatus('');
+  listenForNotes();
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function formatDate(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function listenForNotes() {
+  const q = query(notesRef(), orderBy('updatedAt', 'desc'));
+  onSnapshot(q,
+    snap => {
+      listEl.innerHTML = '';
+      if (snap.empty) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+      emptyEl.style.display = 'none';
+      snap.forEach(docSnap => renderNote(docSnap.id, docSnap.data()));
+    },
+    err => setStatus('Could not load notes: ' + err.message, true)
+  );
+}
+
+function renderNote(id, data) {
+  const card = document.createElement('div');
+  card.className = 'note-card';
+  card.dataset.id = id;
+  card.innerHTML = `
+    <div class="note-actions">
+      <button class="icon-btn edit-trigger" title="Edit">✎</button>
+      <button class="icon-btn del del-trigger" title="Delete">✕</button>
+    </div>
+    <h3>${escapeHtml(data.title || 'Untitled')}</h3>
+    <p>${escapeHtml(data.body || '')}</p>
+    <div class="note-meta">Updated ${formatDate(data.updatedAt)}</div>
+  `;
+  card.querySelector('.del-trigger').addEventListener('click', () => deleteNote(id, data.title));
+  card.querySelector('.edit-trigger').addEventListener('click', () => enterEditMode(card, id, data));
+  listEl.appendChild(card);
+}
+
+function enterEditMode(card, id, data) {
+  card.classList.add('edit-mode');
+  card.innerHTML = `
+    <input type="text" class="edit-title" value="${escapeHtml(data.title || '')}">
+    <textarea class="edit-body">${escapeHtml(data.body || '')}</textarea>
+    <div class="edit-actions">
+      <button class="btn-ghost cancel-edit">Cancel</button>
+      <button class="btn-primary save-edit">Save</button>
+    </div>
+  `;
+  card.querySelector('.cancel-edit').addEventListener('click', () => renderNoteInPlace(card, id, data));
+  card.querySelector('.save-edit').addEventListener('click', () => saveEdit(card, id));
+}
+
+function renderNoteInPlace(card, id, data) {
+  card.classList.remove('edit-mode');
+  card.remove();
+  renderNote(id, data);
+}
+
+function saveEdit(card, id) {
+  const title = card.querySelector('.edit-title').value.trim();
+  const body = card.querySelector('.edit-body').value.trim();
+  if (!title && !body) return;
+  updateDoc(doc(db, 'users', uid, 'notes', id), {
+    title, body,
+    updatedAt: serverTimestamp()
+  }).catch(err => setStatus('Update failed: ' + err.message, true));
+}
+
+function deleteNote(id, title) {
+  if (!confirm(`Delete "${title || 'this note'}"?`)) return;
+  deleteDoc(doc(db, 'users', uid, 'notes', id))
+    .catch(err => setStatus('Delete failed: ' + err.message, true));
+}
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  if (!uid) { setStatus('No user ID — cannot save.', true); return; }
+  const titleEl = document.getElementById('noteTitle');
+  const bodyEl = document.getElementById('noteBody');
+  const title = titleEl.value.trim();
+  const body = bodyEl.value.trim();
+  if (!title && !body) return;
+
+  addDoc(notesRef(), {
+    title, body,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }).then(() => {
+    titleEl.value = '';
+    bodyEl.value = '';
+    titleEl.focus();
+  }).catch(err => setStatus('Could not add note: ' + err.message, true));
+});
+</script>
+</body>
+</html>
